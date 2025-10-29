@@ -1,0 +1,462 @@
+openapi: "3.0.2"
+info:
+  title: API Restoran
+  description: API untuk mengelola data restoran seperti menu, pesanan, harga menu, status pesanan
+  version: '1.0.0'
+  termsOfService: http://swagger.io/terms/
+  contact: 
+    name: Admin API Restoran
+    email: admin@restoran.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://api.restoran.com/v1
+    description: Production Server
+  - url: https://api-staging.restoran.com/v1
+    description: Staging Server
+
+tags:
+  - name: Menu
+    description: Endpoint terkait dengan pengelolaan menu restoran
+  - name: Pesanan
+    description: Endpoint untuk mengelola pesanan 
+  - name: Transaksi
+    description: Endpoint untuk mengelola transaksi
+
+paths:
+  /menu:
+    get:
+      tags:
+        - Menu
+      summary: Mendapatkan daftar menu
+      description: Mengambil semua menu yang ada
+      operationId: getMenu
+      responses:
+        '200':
+          description: Daftar menu berhasil dimuat
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Menu'
+        '500':
+          description: Kesalahan server
+      
+    post:
+      tags:
+        - Menu
+      summary: Menambah menu baru 
+      description: Menambahkan makanan atau minumam baru ke dalam daftar menu
+      operationId: addMenu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuInput'
+      responses:
+        '201':
+          description: Menu berhasil ditambahkan
+        '400':
+          description: Data tidak valid
+        '500':
+          description: Kesalahan server
+
+  /menu/{id}:
+    get:
+      tags:
+        - Menu
+      summary: Mendapatkan detail menu
+      description: Menampilkan detail menu berdasarkan id
+      operationId: getMenuById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID menu yang ingin diambil
+          schema: 
+            type: string
+      responses:
+        '200':
+          description: Detail menu berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Menu'
+        '404':
+          description: Menu tidak ditemukan
+        '500':
+          description: Kesalahan server
+      
+    put:
+      tags:
+        - Menu
+      summary: Memperbarui data menu
+      description: Mengubah informasi menu berdasarkan ID
+      operationId: updateMenu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID menu yang akan diperbarui
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:  
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuInput'
+      responses:
+        '200':
+          description: Menu berhasil diperbarui
+        '404':
+          description: Menu tidak ditemukan
+        '400':
+          description: Data tidak valid
+        '500':
+          description: Kesalahan server
+
+    delete:
+      tags:
+        - Menu
+      summary: Menghapus menu
+      description: Menghapus menu berdasarkan ID
+      operationId: deleteMenu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID menu yang akan dihapus
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Menu berhasil dihapus
+        '404':
+          description: Menu tidak ditemukan
+        '500':
+          description: Kesalahan server
+
+  /pesanan:
+    get:
+      tags:
+        - Pesanan
+      summary: Mendapatkan semua pesanan
+      description: Menampilkan daftar semua pesanan pelanggan
+      operationId: getAllPesanan
+      responses:
+        '200':
+          description: Daftar pesanan berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pesanan'
+        '500':
+          description: Kesalahan server
+    
+    post: 
+      tags:
+        - Pesanan
+      summary: Membuat pesanan baru
+      description: Pelanggan membuat pesanan baru
+      operationId: createPesanan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PesananInput'
+      responses:
+        '201':
+          description: Pesanan berhasil dibuat
+        '400':
+          description: Data tidak valid
+        '500':
+          description: Kesalahan server
+
+  /pesanan/{id}:
+    get:
+      tags:
+        - Pesanan 
+      summary: Mendapatkan detail pesanan
+      description: Melihat detail pesanan berdasarkan ID
+      operationId: getPesananById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID Pesanan yang akan diambil
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detail pesanan berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pesanan'
+        '404':
+          description: Pesanan tidak ditemukan
+        '500':
+          description: Kesalahan server
+
+    put:
+      tags:
+        - Pesanan
+      summary: Mengubah status pesanan
+      description: Admin atau dapur memperbarui status pesanan
+      operationId: updateStatusPesanan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID pesanan yang akan diperbarui
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: Status baru untuk pesanan
+                  enum: [pending, dimasak, selesai, dibatalkan]
+                  example: 'dimasak'
+              required: 
+                - status
+      responses:
+        '200':
+          description: Status pesanan berhasil diperbarui
+        '400':
+          description: Status tidak valid
+        '404':
+          description: Pesanan tidak ditemukan 
+
+    delete:
+      tags:
+        - Pesanan
+      summary: Membatalkan pesanan
+      description: Menghapus pesanan yang belum diproses
+      operationId: cancelPesanan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID pesanan yang ingin dibatalkan
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Pesanan berhasil dibatalkan
+        '404':
+          description: Pesanan tidak ditemukan
+        '500': 
+          description: Kesalahan server
+
+  /transaksi:
+    get:
+      tags:
+        - Transaksi
+      summary: Melihat daftar transaksi
+      description: Mengambil semua transaksi pembayaran
+      operationId: getAllTransaksi
+      responses:
+        '200':
+          description: Daftar transaksi berhasil diambil
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaksi'
+        '500':
+          description: Kesalahan server
+    
+    post:
+      tags: 
+        - Transaksi
+      summary: Membuat transaksi baru
+      description: Mencatat transaksi pembayaran dari pesanan pelanggan
+      operationId: createTransaksi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransaksiInput'
+      responses:
+        '201':
+          description: Transaksi berhasil dicatat
+        '400':
+          description: Data transaksi tidak valid
+        '500':
+          description: Kesalahan server
+
+  /transaksi/{id}:
+    get: 
+      tags:
+        - Transaksi
+      summary: Mendapatkan detail transaksi
+      description: Menampilkan detail transakasi berdasarkan ID
+      operationId: getTransaksiById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID transaksi yang akan diambil
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detail transaksi berhasil diambil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaksi'
+        '404':
+          description: Transaksi tidak ditemukan
+        '500':
+          description: Kesalahan server
+
+components:
+  schemas:
+    Menu:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'm001'
+        nama:
+          type: string
+          example: 'Nasi Goreng Spesial'
+        kategori: 
+          type: string
+          example: 'Makanan'
+        harga:
+          type: number
+          format: float
+          example: 25000
+        deskripsi:
+          type: string
+          example: 'Nasi Goreng dengan telur dan ayam suwir'
+
+    MenuInput:
+      type: object
+      properties:
+        nama: 
+          type: string
+        kategori:
+          type: string
+        harga:
+          type: number
+        deskripsi:
+          type: string
+      required:
+        - nama
+        - harga
+
+    PesananItem:
+      type: object
+      properties:
+        menu_id:
+          type: string
+          example: 'm001'
+        nama_menu:
+          type: string
+          example: 'Nasi Goreng Spesial'
+        jumlah:
+          type: integer
+          example: 2
+        harga_satuan:
+          type: number
+          example: 25000
+
+    Pesanan:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'p001'
+        nama_pelanggan:
+          type: string
+          example: 'Dimas'
+        daftar_menu:
+          type: array
+          items:
+            $ref: '#/components/schemas/PesananItem'
+        total_harga:
+          type: number
+          example: 33000
+        status:
+          type: string
+          example: 'pending'
+
+    PesananItemInput:
+      type: object
+      properties:
+        menu_id: 
+          type: string
+          example: 'm001'
+        jumlah:
+          type: integer
+          minimum: 1
+          example: 2
+      required:
+        - menu_id
+        - jumlah
+
+    PesananInput:
+      type: object
+      properties:
+        nama_pelanggan:
+          type: string
+        daftar_menu:
+          type: array
+          items:
+            $ref: '#/components/schemas/PesananItemInput'
+      required:
+        - nama_pelanggan
+        - daftar_menu
+
+    Transaksi:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 't001'
+        pesanan_id:
+          type: string
+          example: 'p001'
+        metode_pembayaran:
+          type: string
+          description: Tunai, QRIS, Kartu bank
+          example: 'QRIS'
+        jumlah_bayar:
+          type: number
+          example: 35000
+        tanggal: 
+          type: string
+          format: date-time
+          example: '2025-10-26T18:16:00+07:00'
+
+    TransaksiInput:
+      type: object
+      properties:
+        pesanan_id:
+          type: string
+        metode_pembayaran:
+          type: string
+        jumlah_bayar:
+          type: number
+      required:
+        - pesanan_id
+        - jumlah_bayar
